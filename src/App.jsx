@@ -74,11 +74,54 @@ const events = [
   },
 ];
 
+const initialLostFoundReports = [
+  {
+    id: 1,
+    type: "Lost",
+    item: "Black Wireless Headphones",
+    location: "Near Block 34",
+    date: "Today",
+    description: "Black over-ear wireless headphones.",
+    icon: "🎧",
+  },
+  {
+    id: 2,
+    type: "Found",
+    item: "Student ID Card",
+    location: "Near Central Library",
+    date: "Today",
+    description: "Student ID card found near the library entrance.",
+    icon: "💳",
+  },
+  {
+    id: 3,
+    type: "Lost",
+    item: "Engineering Notebook",
+    location: "Student Activity Center",
+    date: "Yesterday",
+    description: "Engineering notebook with handwritten class notes.",
+    icon: "📚",
+  },
+];
+
 function App() {
   const [page, setPage] = useState("home");
   const [selectedSpace, setSelectedSpace] = useState(null);
   const [filter, setFilter] = useState("All");
   const [aiQuery, setAiQuery] = useState("");
+
+  const [lostFoundMode, setLostFoundMode] = useState(null);
+
+  const [lostFoundReports, setLostFoundReports] = useState(
+    initialLostFoundReports
+  );
+
+  const [reportForm, setReportForm] = useState({
+    item: "",
+    location: "",
+    date: "",
+    description: "",
+  });
 
   const filteredSpaces =
     filter === "All"
@@ -93,8 +136,7 @@ function App() {
   function getDirections() {
     if (!selectedSpace) return;
 
-    const location =
-      selectedSpace.name + ", LPU, Punjab";
+    const location = selectedSpace.name + ", LPU, Punjab";
 
     const url =
       "https://www.google.com/maps/search/?api=1&query=" +
@@ -102,6 +144,381 @@ function App() {
 
     window.open(url, "_blank");
   }
+
+  function openLostFoundForm(type) {
+    setLostFoundMode(type);
+
+    setReportForm({
+      item: "",
+      location: "",
+      date: "",
+      description: "",
+    });
+  }
+
+  function handleReportChange(event) {
+    const { name, value } = event.target;
+
+    setReportForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  }
+
+  function submitLostFoundReport(event) {
+    event.preventDefault();
+
+    if (!lostFoundMode) return;
+
+    const newReport = {
+      id: Date.now(),
+      type: lostFoundMode,
+      item: reportForm.item,
+      location: reportForm.location,
+      date: reportForm.date,
+      description: reportForm.description,
+      icon: lostFoundMode === "Lost" ? "🔎" : "🎒",
+    };
+
+    setLostFoundReports((previous) => [
+      newReport,
+      ...previous,
+    ]);
+
+    setReportForm({
+      item: "",
+      location: "",
+      date: "",
+      description: "",
+    });
+
+    setLostFoundMode(null);
+  }
+
+  /* ================= LOST & FOUND ================= */
+
+  if (page === "lostfound") {
+    return (
+      <div className="app">
+        <Navbar setPage={setPage} />
+
+        <main className="space-finder">
+          <button
+            className="back-button"
+            onClick={() => setPage("home")}
+          >
+            ← Back to dashboard
+          </button>
+
+          <div className="finder-header">
+            <div>
+              <span className="eyebrow">
+                CAMPUS LOST & FOUND
+              </span>
+
+              <h1>
+                Lost something? Found something?
+              </h1>
+
+              <p>
+                Help your campus community return lost
+                belongings.
+              </p>
+            </div>
+
+            <div className="space-count">
+              <strong>{lostFoundReports.length}</strong>
+              <span>recent reports</span>
+            </div>
+          </div>
+
+          {!lostFoundMode ? (
+            <div className="module-grid">
+              <button
+                className="dashboard-module featured"
+                onClick={() =>
+                  openLostFoundForm("Lost")
+                }
+              >
+                <div className="module-icon">
+                  😢
+                </div>
+
+                <div>
+                  <h3>I Lost Something</h3>
+
+                  <p>
+                    Report an item you lost on campus.
+                  </p>
+                </div>
+
+                <span className="module-arrow">
+                  →
+                </span>
+              </button>
+
+              <button
+                className="dashboard-module"
+                onClick={() =>
+                  openLostFoundForm("Found")
+                }
+              >
+                <div className="module-icon">
+                  🎒
+                </div>
+
+                <div>
+                  <h3>I Found Something</h3>
+
+                  <p>
+                    Report an item you found so the
+                    owner can find it.
+                  </p>
+                </div>
+
+                <span className="module-arrow">
+                  →
+                </span>
+              </button>
+            </div>
+          ) : (
+            <section
+              className="section dashboard-section"
+              style={{
+                maxWidth: "800px",
+                margin: "0 auto 40px",
+              }}
+            >
+              <div
+                style={{
+                  background: "white",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "24px",
+                  padding: "32px",
+                }}
+              >
+                <button
+                  className="back-button"
+                  onClick={() =>
+                    setLostFoundMode(null)
+                  }
+                >
+                  ← Back to Lost & Found
+                </button>
+
+                <span className="eyebrow">
+                  {lostFoundMode === "Lost"
+                    ? "REPORT LOST ITEM"
+                    : "REPORT FOUND ITEM"}
+                </span>
+
+                <h2>
+                  {lostFoundMode === "Lost"
+                    ? "Tell us what you lost"
+                    : "Tell us what you found"}
+                </h2>
+
+                <p>
+                  Add a few details so students can
+                  identify and return the item.
+                </p>
+
+                <form
+                  onSubmit={submitLostFoundReport}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "18px",
+                    marginTop: "24px",
+                  }}
+                >
+                  <div>
+                    <label
+                      htmlFor="item"
+                      style={{
+                        display: "block",
+                        fontWeight: "700",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Item name
+                    </label>
+
+                    <input
+                      id="item"
+                      name="item"
+                      type="text"
+                      value={reportForm.item}
+                      onChange={handleReportChange}
+                      placeholder="e.g. Black AirPods"
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "14px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #dbe2ea",
+                        fontSize: "15px",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="location"
+                      style={{
+                        display: "block",
+                        fontWeight: "700",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      {lostFoundMode === "Lost"
+                        ? "Where did you lose it?"
+                        : "Where did you find it?"}
+                    </label>
+
+                    <input
+                      id="location"
+                      name="location"
+                      type="text"
+                      value={reportForm.location}
+                      onChange={handleReportChange}
+                      placeholder="e.g. Block 34, Library"
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "14px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #dbe2ea",
+                        fontSize: "15px",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="date"
+                      style={{
+                        display: "block",
+                        fontWeight: "700",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Date
+                    </label>
+
+                    <input
+                      id="date"
+                      name="date"
+                      type="date"
+                      value={reportForm.date}
+                      onChange={handleReportChange}
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "14px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #dbe2ea",
+                        fontSize: "15px",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="description"
+                      style={{
+                        display: "block",
+                        fontWeight: "700",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Description
+                    </label>
+
+                    <textarea
+                      id="description"
+                      name="description"
+                      value={reportForm.description}
+                      onChange={handleReportChange}
+                      placeholder="Add useful details such as colour, brand, or identifying marks..."
+                      rows="4"
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "14px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #dbe2ea",
+                        fontSize: "15px",
+                        boxSizing: "border-box",
+                        resize: "vertical",
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="primary-button full-button"
+                  >
+                    Submit Report →
+                  </button>
+                </form>
+              </div>
+            </section>
+          )}
+
+          {!lostFoundMode && (
+            <section className="section dashboard-section">
+              <span className="eyebrow">
+                RECENT REPORTS
+              </span>
+
+              <h2>Items reported on campus</h2>
+
+              <div className="mini-space-list">
+                {lostFoundReports.map((report) => (
+                  <div
+                    className="mini-space"
+                    key={report.id}
+                  >
+                    <div className="mini-space-icon">
+                      {report.icon}
+                    </div>
+
+                    <div>
+                      <strong>
+                        {report.item}
+                      </strong>
+
+                      <p>
+                        {report.type} near{" "}
+                        {report.location} •{" "}
+                        {report.date}
+                      </p>
+
+                      {report.description && (
+                        <p>
+                          {report.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <span className="event-tag">
+                      {report.type.toUpperCase()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  /* ================= SPACE FINDER ================= */
 
   if (page === "spaces") {
     return (
@@ -122,16 +539,21 @@ function App() {
                 CAMPUS SPACE FINDER
               </span>
 
-              <h1>Find your perfect space.</h1>
+              <h1>
+                Find your perfect space.
+              </h1>
 
               <p>
-                Discover available places to study, work,
-                collaborate or relax.
+                Discover available places to study,
+                work, collaborate or relax.
               </p>
             </div>
 
             <div className="space-count">
-              <strong>{filteredSpaces.length}</strong>
+              <strong>
+                {filteredSpaces.length}
+              </strong>
+
               <span>spaces found</span>
             </div>
           </div>
@@ -139,21 +561,26 @@ function App() {
           <div className="filter-bar">
             <span>Availability:</span>
 
-            {["All", "Available", "Moderate", "Busy"].map(
-              (option) => (
-                <button
-                  key={option}
-                  className={
-                    filter === option
-                      ? "filter active"
-                      : "filter"
-                  }
-                  onClick={() => setFilter(option)}
-                >
-                  {option}
-                </button>
-              )
-            )}
+            {[
+              "All",
+              "Available",
+              "Moderate",
+              "Busy",
+            ].map((option) => (
+              <button
+                key={option}
+                className={
+                  filter === option
+                    ? "filter active"
+                    : "filter"
+                }
+                onClick={() =>
+                  setFilter(option)
+                }
+              >
+                {option}
+              </button>
+            ))}
           </div>
 
           <div className="space-finder-layout">
@@ -167,7 +594,9 @@ function App() {
                       : "finder-card"
                   }
                   key={space.id}
-                  onClick={() => setSelectedSpace(space)}
+                  onClick={() =>
+                    setSelectedSpace(space)
+                  }
                 >
                   <div className="finder-card-icon">
                     {space.type === "Library"
@@ -194,7 +623,8 @@ function App() {
                     </div>
 
                     <p>
-                      {space.type} • {space.location}
+                      {space.type} •{" "}
+                      {space.location}
                     </p>
 
                     <div className="space-meta">
@@ -210,7 +640,9 @@ function App() {
                     </div>
                   </div>
 
-                  <span className="arrow">→</span>
+                  <span className="arrow">
+                    →
+                  </span>
                 </div>
               ))}
             </div>
@@ -226,7 +658,9 @@ function App() {
                     SPACE DETAILS
                   </span>
 
-                  <h2>{selectedSpace.name}</h2>
+                  <h2>
+                    {selectedSpace.name}
+                  </h2>
 
                   <p className="details-location">
                     {selectedSpace.location}
@@ -234,7 +668,10 @@ function App() {
 
                   <div className="availability-box">
                     <div>
-                      <span>Available seats</span>
+                      <span>
+                        Available seats
+                      </span>
+
                       <strong>
                         {selectedSpace.available}
                       </strong>
@@ -242,6 +679,7 @@ function App() {
 
                     <div>
                       <span>Capacity</span>
+
                       <strong>
                         {selectedSpace.capacity}
                       </strong>
@@ -250,6 +688,7 @@ function App() {
 
                   <div className="detail-row">
                     <span>Type</span>
+
                     <strong>
                       {selectedSpace.type}
                     </strong>
@@ -257,6 +696,7 @@ function App() {
 
                   <div className="detail-row">
                     <span>Environment</span>
+
                     <strong>
                       {selectedSpace.environment}
                     </strong>
@@ -287,6 +727,8 @@ function App() {
     );
   }
 
+  /* ================= AI PAGE ================= */
+
   if (page === "ai") {
     return (
       <div className="app">
@@ -301,7 +743,9 @@ function App() {
           </button>
 
           <div className="ai-header">
-            <div className="ai-orb">✨</div>
+            <div className="ai-orb">
+              ✨
+            </div>
 
             <span className="eyebrow">
               CAMPUS AI
@@ -312,8 +756,9 @@ function App() {
             </h1>
 
             <p>
-              Ask CampusFix about spaces, events, food,
-              navigation and everyday campus life.
+              Ask CampusFix about spaces, events,
+              food, navigation and everyday campus
+              life.
             </p>
           </div>
 
@@ -342,8 +787,9 @@ function App() {
                   </strong>
 
                   <p>
-                    Quiet Zone • 18 seats available •
-                    5 min from Block 34
+                    Quiet Zone • 18 seats
+                    available • 5 min from
+                    Block 34
                   </p>
                 </div>
 
@@ -392,6 +838,8 @@ function App() {
     );
   }
 
+  /* ================= HOME DASHBOARD ================= */
+
   return (
     <div className="app">
       <Navbar setPage={setPage} />
@@ -410,8 +858,8 @@ function App() {
             </h1>
 
             <p>
-              Everything you need for a better campus
-              day, in one place.
+              Everything you need for a better
+              campus day, in one place.
             </p>
           </div>
 
@@ -515,7 +963,9 @@ function App() {
               icon="🗺️"
               title="Campus Map"
               text="Find classrooms, labs, hostels, parking and more."
-              onClick={() => setPage("spaces")}
+              onClick={() =>
+                setPage("spaces")
+              }
               featured
             />
 
@@ -564,6 +1014,15 @@ function App() {
               icon="🚌"
               title="Campus Transport"
               text="Bus routes, timings and estimated arrivals."
+            />
+
+            <DashboardModule
+              icon="🔎"
+              title="Lost & Found"
+              text="Report lost items and help return things to their owners."
+              onClick={() =>
+                setPage("lostfound")
+              }
             />
           </div>
         </section>
@@ -700,8 +1159,9 @@ function App() {
               </h3>
 
               <p>
-                Check the latest examination schedule
-                and academic announcements.
+                Check the latest examination
+                schedule and academic
+                announcements.
               </p>
             </div>
 
@@ -724,12 +1184,15 @@ function App() {
         </div>
 
         <p>
-          Making campus life easier, one fix at a time.
+          Making campus life easier, one fix at
+          a time.
         </p>
       </footer>
     </div>
   );
 }
+
+/* ================= NAVBAR ================= */
 
 function Navbar({ setPage }) {
   return (
@@ -772,6 +1235,7 @@ function Navbar({ setPage }) {
           href="#events"
           onClick={(e) => {
             e.preventDefault();
+
             setPage("home");
 
             setTimeout(() => {
@@ -791,6 +1255,8 @@ function Navbar({ setPage }) {
     </nav>
   );
 }
+
+/* ================= DASHBOARD MODULE ================= */
 
 function DashboardModule({
   icon,
